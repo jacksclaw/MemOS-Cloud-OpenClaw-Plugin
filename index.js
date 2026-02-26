@@ -217,7 +217,7 @@ export default {
     api.on("before_agent_start", async (event, ctx) => {
       if (!cfg.recallEnabled) return;
       if (!event?.prompt || event.prompt.length < 3) return;
-      if (!cfg.apiKey) {
+      if (!cfg.apiKey && !cfg.isLocalServer) {
         warnMissingApiKey(log, "recall");
         return;
       }
@@ -239,7 +239,7 @@ export default {
     api.on("agent_end", async (event, ctx) => {
       if (!cfg.addEnabled) return;
       if (!event?.success || !event?.messages?.length) return;
-      if (!cfg.apiKey) {
+      if (!cfg.apiKey && !cfg.isLocalServer) {
         warnMissingApiKey(log, "add");
         return;
       }
