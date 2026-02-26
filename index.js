@@ -62,6 +62,13 @@ function resolveConversationId(cfg, ctx) {
   return `${prefix}openclaw-${Date.now()}${dynamicSuffix}${suffix}`;
 }
 
+// JAC-246: Detect group sessions by ":channel:" segment in sessionKey.
+// Group chats get scoped recall (conversation_id filtered); DMs get global recall.
+function isGroupSession(sessionKey) {
+  if (!sessionKey) return false;
+  return sessionKey.includes(":channel:");
+}
+
 function buildSearchPayload(cfg, prompt, ctx) {
   const queryRaw = `${cfg.queryPrefix || ""}${prompt}`;
   const query =
@@ -75,7 +82,13 @@ function buildSearchPayload(cfg, prompt, ctx) {
     source: MEMOS_SOURCE,
   };
 
-  if (!cfg.recallGlobal) {
+  if (cfg.recallScope === "chat-type") {
+    // JAC-246: Group chats get scoped recall; DMs/main sessions get global recall
+    if (isGroupSession(ctx?.sessionKey)) {
+      const conversationId = resolveConversationId(cfg, ctx);
+      if (conversationId) payload.conversation_id = conversationId;
+    }
+  } else if (!cfg.recallGlobal) {
     const conversationId = resolveConversationId(cfg, ctx);
     if (conversationId) payload.conversation_id = conversationId;
   }
