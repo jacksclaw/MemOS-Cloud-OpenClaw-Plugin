@@ -24,6 +24,7 @@
       "maxQueryChars": { "type": "integer", "description": "Max chars for search query" },
       "recallEnabled": { "type": "boolean", "default": true },
       "recallGlobal": { "type": "boolean", "default": true },
+      "recallScope": { "type": "string", "enum": ["chat-type", ""], "description": "JAC-246: 'chat-type' scopes group recall to conversation_id; DMs get global recall" },
       "addEnabled": { "type": "boolean", "default": true },
       "captureStrategy": {
         "type": "string",
