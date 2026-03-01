@@ -6,6 +6,12 @@ import {
   USER_QUERY_MARKER,
   searchMemory,
 } from "./lib/memos-cloud-api.js";
+import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const BRIDGE_SCRIPT = join(__dirname, "lib", "openviking-bridge.py");
 
 let lastCaptureTime = 0;
 const conversationCounters = new Map();
@@ -261,6 +267,19 @@ export default {
 
         const payload = buildAddMessagePayload(cfg, messages, ctx);
         await addMessage(cfg, payload);
+
+        // AC2: Post-write hook — trigger immediate AGFS bridge sync (fire-and-forget)
+        try {
+          const bridge = spawn(BRIDGE_SCRIPT, ["sync"], {
+            detached: true,
+            stdio: "ignore",
+            env: { ...process.env },
+          });
+          bridge.unref();
+          log.debug?.("[memos-cloud] AGFS bridge sync triggered");
+        } catch (bridgeErr) {
+          log.warn?.(`[memos-cloud] AGFS bridge spawn failed: ${String(bridgeErr)}`);
+        }
       } catch (err) {
         log.warn?.(`[memos-cloud] add failed: ${String(err)}`);
       }
